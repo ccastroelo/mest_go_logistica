@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"linear/avaliacao_validacao"
 	"linear/carrega_csv"
-	gradientedescendente "linear/gradiente_descendente"
+	"linear/gradiente"
 
 	"os"
 	"strconv"
@@ -17,6 +17,7 @@ func main() {
 	var varDepTest, varDep, coefs []float64
 	var varIndep, varIndepTest [][]float64
 	var dims []int
+	sair := false
 
 	//Debug
 	/*	_hVarDep, _varDep, _varDepTest, _hVarIndep, _varIndep, _varIndepTest, err := carrega_csv.CarregaCSV("./assets/training.csv", 0)
@@ -41,8 +42,28 @@ func main() {
 		coefs = _coefs
 		fmt.Println("")
 		imprimeFormula(hVarDep, hVarIndep, dims, coefs)
-	*/
-	sair := false
+		_, _, acuracia, BCE := avaliacao_validacao.AvaliaValidaModelo(coefs, varIndep, varDep, dims)
+		fmt.Println("")
+		//			fmt.Println("MAE = ", MAE)
+		//			fmt.Println("MSE = ", MSE)
+		fmt.Println("Binary Cross Entropy = ", BCE)
+		fmt.Println("Acuracia = ", acuracia)
+		fmt.Println("")
+
+		_coefs2 := gradiente.CalcGradient(varIndep, varDep, dims, 1000, 0.3)
+		coefs = _coefs2
+		fmt.Println("")
+		imprimeFormula(hVarDep, hVarIndep, dims, coefs)
+		_, _, acuracia2, BCE2 := avaliacao_validacao.AvaliaValidaModelo(coefs, varIndep, varDep, dims)
+		fmt.Println("")
+		//			fmt.Println("MAE = ", MAE)
+		//			fmt.Println("MSE = ", MSE)
+		fmt.Println("Binary Cross Entropy = ", BCE2)
+		fmt.Println("Acuracia = ", acuracia2)
+		fmt.Println("")
+		sair = true */
+	// fim debug
+
 	for !sair {
 		fmt.Println("*******************************************************************************************")
 		fmt.Println("Opções: ")
@@ -119,24 +140,6 @@ func main() {
 		case opcao.Text() == "2":
 			fmt.Println("")
 			fmt.Println(">> Calcula regressão logistica")
-			fmt.Println("")
-			fmt.Println("Qual a quantidade de iteracoes?")
-			itertxt := bufio.NewScanner(os.Stdin)
-			itertxt.Scan()
-			iter, err := strconv.Atoi(itertxt.Text())
-			if err != nil {
-				fmt.Println(err)
-				continue
-			}
-			fmt.Println("")
-			fmt.Println("Qual a taxa de aprendizagem?")
-			taxatxt := bufio.NewScanner(os.Stdin)
-			taxatxt.Scan()
-			taxa, err := strconv.ParseFloat(taxatxt.Text(), 64)
-			if err != nil {
-				fmt.Println(err)
-				continue
-			}
 
 			fmt.Println("")
 			fmt.Println("Informe as dimensões (informe o número <enter> para finalizar):")
@@ -158,7 +161,25 @@ func main() {
 				_dims = append(_dims, dim)
 			}
 			dims = _dims
-			_coefs := gradientedescendente.CalcCoef(varIndep, varDep, dims, iter, taxa)
+			fmt.Println("")
+			fmt.Println("Qual a quantidade de iteracoes?")
+			_passos := bufio.NewScanner(os.Stdin)
+			_passos.Scan()
+			passos, err := strconv.Atoi(_passos.Text())
+			if err != nil {
+				fmt.Println(err)
+				continue
+			}
+			fmt.Println("")
+			fmt.Println("Qual a taxa de aprendizagem?")
+			_taxa := bufio.NewScanner(os.Stdin)
+			_taxa.Scan()
+			taxa, err := strconv.ParseFloat(_taxa.Text(), 64)
+			if err != nil {
+				fmt.Println(err)
+				continue
+			}
+			_coefs := gradiente.CalcGradient(varIndep, varDep, dims, passos, taxa)
 			coefs = _coefs
 			fmt.Println("")
 			imprimeFormula(hVarDep, hVarIndep, dims, coefs)
@@ -173,10 +194,8 @@ func main() {
 			}
 			_, _, acuracia, BCE := avaliacao_validacao.AvaliaValidaModelo(coefs, varIndep, varDep, dims)
 			fmt.Println("")
-			//			fmt.Println("MAE = ", MAE)
-			//			fmt.Println("MSE = ", MSE)
 			fmt.Println("Binary Cross Entropy = ", BCE)
-			fmt.Println("Acuracia = ", acuracia)
+			fmt.Println("Acurácia = ", acuracia)
 			fmt.Println("")
 		case opcao.Text() == "4":
 			fmt.Println("")
@@ -187,14 +206,14 @@ func main() {
 				break
 			}
 			yEstimado, yClass, acuracia, BCE := avaliacao_validacao.AvaliaValidaModelo(coefs, varIndepTest, varDepTest, dims)
-			fmt.Println("Binary Cross Entropy = ", BCE)
-			fmt.Println("Acuracia = ", acuracia)
-
 			fmt.Println("")
 			fmt.Println("Observado => Estimado => classificado")
 			for i, y := range yClass {
 				fmt.Println(varDepTest[i], " => ", strconv.FormatFloat(yEstimado[i], 'f', -1, 32), " => ", y)
 			}
+			fmt.Println("")
+			fmt.Println("Binary Cross Entropy = ", BCE)
+			fmt.Println("Acuracia = ", acuracia)
 			fmt.Println("")
 			imprimeFormula(hVarDep, hVarIndep, dims, coefs)
 
